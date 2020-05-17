@@ -33,7 +33,7 @@ namespace LiteDbExplorer.Core
 
             var connectionString = options.GetConnectionString();
 
-            LiteDatabase = new LiteDatabase(connectionString, log: GetLogger());
+            LiteDatabase = new LiteDatabase(connectionString);
 
             UpdateCollections();
 
@@ -50,8 +50,8 @@ namespace LiteDbExplorer.Core
 
         public int UserVersion
         {
-            get => LiteDatabase.Engine.UserVersion;
-            set => LiteDatabase.Engine.UserVersion = (ushort) value;
+            get => LiteDatabase.UserVersion;
+            set => LiteDatabase.UserVersion = (ushort) value;
         }
 
         public ObservableCollection<CollectionReferenceLookup> CollectionsLookup { get; private set; }
@@ -157,24 +157,24 @@ namespace LiteDbExplorer.Core
             return Collections.Any(p => p.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
         }
 
-        public long ShrinkDatabase()
-        {
-            return LiteDatabase.Shrink();
-        }
+        //public long ShrinkDatabase()
+        //{
+        //    return LiteDatabase.Shrink();
+        //}
 
-        public long ShrinkDatabase(string password)
-        {
-            return LiteDatabase.Shrink(password);
-        }
+        //public long ShrinkDatabase(string password)
+        //{
+        //    return LiteDatabase.Shrink(password);
+        //}
 
-        public IList<BsonValue> RunCommand(string command)
-        {
-            return LiteDatabase.Engine.Run(command);
-        }
+        //public IList<BsonValue> RunCommand(string command)
+        //{
+        //    return LiteDatabase.Engine.Run(command);
+        //}
 
-        public BsonDocument InternalDatabaseInfo()
+        public BsonValue InternalDatabaseInfo()
         {
-            return LiteDatabase.Engine.Info();
+            return LiteDatabase.Mapper.ToDocument(typeof(object), new { LiteDatabase.Timeout, LiteDatabase.UserVersion, LiteDatabase.UtcDate, LiteDatabase.LimitSize, LiteDatabase.CheckpointSize });
         }
 
         public void BeforeDispose()
@@ -188,27 +188,26 @@ namespace LiteDbExplorer.Core
 
             BroadcastChanges(ReferenceNodeChangeAction.Dispose, this);
         }
+        //public static bool IsDbPasswordProtected(string path)
+        //{
+        //    using (var db = new LiteDatabase(path))
+        //    {
+        //        try
+        //        {
+        //            db.GetCollectionNames();
+        //            return false;
+        //        }
+        //        catch (LiteException e)
+        //        {
+        //            if (e.ErrorCode == LiteException.DATABASE_WRONG_PASSWORD || e.Message.Contains("password"))
+        //            {
+        //                return true;
+        //            }
 
-        public static bool IsDbPasswordProtected(string path)
-        {
-            using (var db = new LiteDatabase(path))
-            {
-                try
-                {
-                    db.GetCollectionNames();
-                    return false;
-                }
-                catch (LiteException e)
-                {
-                    if (e.ErrorCode == LiteException.DATABASE_WRONG_PASSWORD || e.Message.Contains("password"))
-                    {
-                        return true;
-                    }
-
-                    throw;
-                }
-            }
-        }
+        //            throw;
+        //        }
+        //    }
+        //}
 
         protected override void Dispose(bool disposing)
         {
@@ -269,16 +268,6 @@ namespace LiteDbExplorer.Core
 
                 referenceCollection.OnReferenceChanged(action, referenceCollection);
             }
-        }
-
-        private Logger GetLogger()
-        {
-            if (_enableLog)
-            {
-                return new Logger(Logger.FULL, log => { Log.ForContext("DatabaseName", Name).Information(log); });
-            }
-
-            return null;
         }
 
         private void UpdateCollections()

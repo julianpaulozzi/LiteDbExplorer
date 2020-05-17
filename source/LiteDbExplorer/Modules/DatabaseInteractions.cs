@@ -84,7 +84,7 @@ namespace LiteDbExplorer.Modules
 
             using (var stream = new FileStream(maybeFileName.Value, System.IO.FileMode.Create))
             {
-                LiteEngine.CreateDatabase(stream);
+                new LiteDatabase(stream);
             }
 
             await OpenDatabase(maybeFileName.Value).ConfigureAwait(false);
@@ -138,23 +138,23 @@ namespace LiteDbExplorer.Modules
             try
             {
                 var rememberMe = false;
-                if (DatabaseReference.IsDbPasswordProtected(path))
-                {
-                    if (string.IsNullOrWhiteSpace(password) && _recentDatabaseFilesProvider.TryGetPassword(path, out var storedPassword))
-                    {
-                        password = storedPassword;
-                        rememberMe = true;
-                    }
+                //if (DatabaseReference.IsDbPasswordProtected(path))
+                //{
+                //    if (string.IsNullOrWhiteSpace(password) && _recentDatabaseFilesProvider.TryGetPassword(path, out var storedPassword))
+                //    {
+                //        password = storedPassword;
+                //        rememberMe = true;
+                //    }
 
-                    var maybePasswordInput = await _applicationInteraction.ShowPasswordInputDialog("Database is password protected, enter password:", "Database password.", password, rememberMe);
-                    if (maybePasswordInput.HasNoValue)
-                    {
-                        return;
-                    }
+                //    var maybePasswordInput = await _applicationInteraction.ShowPasswordInputDialog("Database is password protected, enter password:", "Database password.", password, rememberMe);
+                //    if (maybePasswordInput.HasNoValue)
+                //    {
+                //        return;
+                //    }
 
-                    password = maybePasswordInput.Value.Password;
-                    rememberMe = maybePasswordInput.Value.RememberMe;
-                }
+                //    password = maybePasswordInput.Value.Password;
+                //    rememberMe = maybePasswordInput.Value.RememberMe;
+                //}
 
                 var connectionOptions = new DatabaseConnectionOptions(path, password)
                 {
@@ -191,15 +191,19 @@ namespace LiteDbExplorer.Modules
 
         protected virtual async Task OpenDatabaseExceptionHandler(LiteException liteException, string path, string password = "")
         {
-            if (liteException.ErrorCode == LiteException.DATABASE_WRONG_PASSWORD)
-            {
-                if (!string.IsNullOrEmpty(password))
-                {
-                    _applicationInteraction.ShowAlert("Failed to open database [LiteException]:" + Environment.NewLine + liteException.Message, null, UINotificationType.Error);
-                }
+            //if (liteException.ErrorCode == LiteException.DATABASE_WRONG_PASSWORD)
+            //{
+            //    if (!string.IsNullOrEmpty(password))
+            //    {
+            //        _applicationInteraction.ShowAlert("Failed to open database [LiteException]:" + Environment.NewLine + liteException.Message, null, UINotificationType.Error);
+            //    }
                     
-                await OpenDatabase(path, password).ConfigureAwait(false);
-            }
+            //    await OpenDatabase(path, password).ConfigureAwait(false);
+            //}
+            //else
+            //{
+                _applicationInteraction.ShowError(liteException.StackTrace, liteException.Message + ". Is this a version 5 file?");
+            //}
         }
         
         public Task CloseDatabase(DatabaseReference database)
@@ -213,7 +217,7 @@ namespace LiteDbExplorer.Modules
         {
             await Task.Factory.StartNew(() =>
             {
-                database.ShrinkDatabase();
+                //database.ShrinkDatabase();
             });
         }
 
@@ -221,7 +225,7 @@ namespace LiteDbExplorer.Modules
         {
             await Task.Factory.StartNew(() =>
             {
-                database.ShrinkDatabase(string.IsNullOrEmpty(password) ? null : password);
+                //database.ShrinkDatabase(string.IsNullOrEmpty(password) ? null : password);
             });
 
             _recentDatabaseFilesProvider.ResetPassword(database.Location, password, true);
@@ -524,7 +528,7 @@ namespace LiteDbExplorer.Modules
         {
             var documentAggregator = new DocumentReferenceAggregator(documents);
             
-            Clipboard.SetData(DataFormats.Text, documentAggregator.Serialize(true, false));
+            Clipboard.SetData(DataFormats.Text, documentAggregator.Serialize());
 
             return Task.FromResult(Result.Ok());
         }
@@ -618,7 +622,7 @@ namespace LiteDbExplorer.Modules
                 {
                     using (var writer = new StreamWriter(maybeJsonFileName.Value))
                     {
-                        documents.First().Serialize(writer, true);
+                        documents.First().Serialize(writer);
                     }
                 }
                 else
@@ -626,7 +630,7 @@ namespace LiteDbExplorer.Modules
                     var documentAggregator = new DocumentReferenceAggregator(documents);
                     using (var writer = new StreamWriter(maybeJsonFileName.Value))
                     {
-                        documentAggregator.Serialize(writer, true, false);
+                        documentAggregator.Serialize(writer);
                     }
                 }
             }
@@ -890,7 +894,7 @@ namespace LiteDbExplorer.Modules
             {
                 using (var writer = new StreamWriter(maybeFileName.Value))
                 {
-                    provider.Serialize(writer, true);
+                    provider.Serialize(writer);
                 }
             }
 
