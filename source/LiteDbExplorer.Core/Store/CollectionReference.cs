@@ -23,7 +23,7 @@ namespace LiteDbExplorer.Core
         [AlsoNotifyFor(nameof(LiteCollection))]
         public DatabaseReference Database { get; set; }
 
-        public LiteCollection<BsonDocument> LiteCollection => Database.LiteDatabase.GetCollection(Name);
+        public ILiteCollection<BsonDocument> LiteCollection => Database.LiteDatabase.GetCollection(Name);
 
         public ObservableCollection<DocumentReference> Items
         {
@@ -120,7 +120,7 @@ namespace LiteDbExplorer.Core
             return Items.SelectAllDistinctKeys(sortOrder).ToList();
         }
 
-        protected virtual IEnumerable<DocumentReference> GetAllItem(LiteCollection<BsonDocument> liteCollection)
+        protected virtual IEnumerable<DocumentReference> GetAllItem(ILiteCollection<BsonDocument> liteCollection)
         {
             /*if (IsFilesOrChunks)
             {

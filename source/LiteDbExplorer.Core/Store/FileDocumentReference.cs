@@ -24,7 +24,7 @@ namespace LiteDbExplorer.Core
             file.SaveAs(path);
         }
 
-        public LiteFileInfo GetFileObject()
+        public LiteFileInfo<string> GetFileObject()
         {
             return Collection.Database.LiteDatabase.FileStorage.FindById(LiteDocument["_id"]);
         }

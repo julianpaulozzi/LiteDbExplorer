@@ -27,14 +27,14 @@ namespace LiteDbExplorer.Core
             }
         }
 
-        public string Serialize(bool pretty = false, bool writeBinary = true)
+        public string Serialize()
         {
-            return JsonSerializer.Serialize(Value, pretty, writeBinary);
+            return JsonSerializer.Serialize(Value);
         }
 
-        public void Serialize(TextWriter writer, bool pretty = false, bool writeBinary = true)
+        public void Serialize(TextWriter writer)
         {
-            JsonSerializer.Serialize(Value, writer, pretty, writeBinary);
+            JsonSerializer.Serialize(Value, writer);
         }
     }
 }
