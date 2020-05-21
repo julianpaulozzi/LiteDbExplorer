@@ -41,14 +41,14 @@ namespace LiteDbExplorer.Modules.DbQuery
                     IList<BsonValue> results;
                     using (resultViewModel.StartTime())
                     {
-                        //results = databaseReference.RunCommand(rawQuery);
+                        results = databaseReference.RunCommand(rawQuery);
                     }
-                    //resultViewModel.SetResult(
-                    //    $"Result {resultCount}", 
-                    //    rawQuery,
-                    //    new QueryResult(results, UserDefinedCultureFormat.Default));
+                    resultViewModel.SetResult(
+                        $"Result {resultCount}",
+                        rawQuery,
+                        new QueryResult(results, UserDefinedCultureFormat.Default));
 
-                    //result.Add(resultViewModel);
+                    result.Add(resultViewModel);
                 }
                 catch (Exception e)
                 {

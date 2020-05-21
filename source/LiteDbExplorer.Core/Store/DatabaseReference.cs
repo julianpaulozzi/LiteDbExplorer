@@ -17,6 +17,12 @@ namespace LiteDbExplorer.Core
         private ObservableCollection<CollectionReference> _collections;
         private bool _isDisposing;
 
+        public enum PasswordStatus
+        {
+            NotSet = 0,
+            Set = 1
+        }
+
         public DatabaseReference([NotNull] DatabaseConnectionOptions options)
         {
             if (options == null)
@@ -51,7 +57,7 @@ namespace LiteDbExplorer.Core
         public int UserVersion
         {
             get => LiteDatabase.UserVersion;
-            set => LiteDatabase.UserVersion = (ushort) value;
+            set => LiteDatabase.UserVersion = (ushort)value;
         }
 
         public ObservableCollection<CollectionReferenceLookup> CollectionsLookup { get; private set; }
@@ -157,22 +163,22 @@ namespace LiteDbExplorer.Core
             return Collections.Any(p => p.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
         }
 
-        //public long ShrinkDatabase()
-        //{
-        //    return LiteDatabase.Shrink();
-        //}
+        public long RebuildDatabase()
+        {
+            return LiteDatabase.Rebuild();
+        }
 
-        //public long ShrinkDatabase(string password)
-        //{
-        //    return LiteDatabase.Shrink(password);
-        //}
+        public long RebuildDatabase(string password)
+        {
+            return LiteDatabase.Rebuild(new LiteDB.Engine.RebuildOptions { Password = password });
+        }
 
-        //public IList<BsonValue> RunCommand(string command)
-        //{
-        //    return LiteDatabase.Engine.Run(command);
-        //}
+        public IList<BsonValue> RunCommand(string command)
+        {
+            return LiteDatabase.Execute(command).ToList();
+        }
 
-        public BsonValue InternalDatabaseInfo()
+        public BsonDocument InternalDatabaseInfo()
         {
             return LiteDatabase.Mapper.ToDocument(typeof(object), new { LiteDatabase.Timeout, LiteDatabase.UserVersion, LiteDatabase.UtcDate, LiteDatabase.LimitSize, LiteDatabase.CheckpointSize });
         }
@@ -188,26 +194,21 @@ namespace LiteDbExplorer.Core
 
             BroadcastChanges(ReferenceNodeChangeAction.Dispose, this);
         }
-        //public static bool IsDbPasswordProtected(string path)
-        //{
-        //    using (var db = new LiteDatabase(path))
-        //    {
-        //        try
-        //        {
-        //            db.GetCollectionNames();
-        //            return false;
-        //        }
-        //        catch (LiteException e)
-        //        {
-        //            if (e.ErrorCode == LiteException.DATABASE_WRONG_PASSWORD || e.Message.Contains("password"))
-        //            {
-        //                return true;
-        //            }
 
-        //            throw;
-        //        }
-        //    }
-        //}
+        /// <summary>
+        /// <a href="https://stackoverflow.com/questions/57139624/how-to-check-if-litedb-database-file-has-password-or-not-in-c"></a>
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public static bool IsDbPasswordProtected(string path)
+        {
+
+            using (FileStream fs = File.OpenRead(path))
+            {
+                var ss= fs.ReadByte() ;
+                return ss != (byte)PasswordStatus.NotSet;
+            }
+        }
 
         protected override void Dispose(bool disposing)
         {
