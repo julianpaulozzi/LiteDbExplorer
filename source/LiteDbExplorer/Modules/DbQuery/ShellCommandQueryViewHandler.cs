@@ -44,7 +44,7 @@ namespace LiteDbExplorer.Modules.DbQuery
                         results = databaseReference.RunCommand(rawQuery);
                     }
                     resultViewModel.SetResult(
-                        $"Result {resultCount}", 
+                        $"Result {resultCount}",
                         rawQuery,
                         new QueryResult(results, UserDefinedCultureFormat.Default));
 

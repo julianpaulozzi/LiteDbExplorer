@@ -34,7 +34,7 @@ namespace LiteDbExplorer.Modules
 
         Task<Maybe<string>> SaveDatabaseCopyAs(DatabaseReference database);
         Task<Result<CollectionDocumentChangeEventArgs>> AddFileToDatabase(IScreen context, DatabaseReference database, string filePath = null);
-        
+
         Task<Result<CollectionDocumentChangeEventArgs>> CreateDocument(IScreen context, CollectionReference collection);
         Task<Result> RemoveDocuments(IEnumerable<DocumentReference> documents);
         Task<Result> CopyDocuments(IEnumerable<DocumentReference> documents);
@@ -43,7 +43,7 @@ namespace LiteDbExplorer.Modules
         Task<Result<CollectionReference>> AddCollection(IScreen context, DatabaseReference database);
         Task<Result> RenameCollection(CollectionReference collection);
         Task<Result<CollectionReference>> DropCollection(CollectionReference collection);
-        
+
 
         Task<Maybe<string>> ExportAs(IScreen context, CollectionReference collectionReference, IList<DocumentReference> selectedDocuments = null);
         Task<Maybe<string>> ExportAs(IScreen context, QueryResult queryResult, string name = "");
@@ -60,7 +60,7 @@ namespace LiteDbExplorer.Modules
     }
 
     [Export(typeof(IDatabaseInteractions))]
-    [PartCreationPolicy (CreationPolicy.Shared)]
+    [PartCreationPolicy(CreationPolicy.Shared)]
     public class DatabaseInteractions : IDatabaseInteractions
     {
         private static readonly ILogger Logger = Log.ForContext<DatabaseInteractions>();
@@ -84,7 +84,7 @@ namespace LiteDbExplorer.Modules
 
             using (var stream = new FileStream(maybeFileName.Value, System.IO.FileMode.Create))
             {
-                LiteEngine.CreateDatabase(stream);
+                new LiteDatabase(stream);
             }
 
             await OpenDatabase(maybeFileName.Value).ConfigureAwait(false);
@@ -105,7 +105,7 @@ namespace LiteDbExplorer.Modules
             catch (Exception exc)
             {
                 Logger.Error(exc, "Failed to open database: ");
-                _applicationInteraction.ShowError(exc,"Failed to open database: " + exc.Message);
+                _applicationInteraction.ShowError(exc, "Failed to open database: " + exc.Message);
             }
         }
 
@@ -134,7 +134,7 @@ namespace LiteDbExplorer.Modules
             {
                 _applicationInteraction.ShowAlert("Maintaining connection to network files is not guaranteed!", "Network file", UINotificationType.Info);
             }
-            
+
             try
             {
                 var rememberMe = false;
@@ -171,7 +171,7 @@ namespace LiteDbExplorer.Modules
                 }
                 else
                 {
-                    _recentDatabaseFilesProvider.InsertRecentFile(databaseReference.DatabaseVersion, path);   
+                    _recentDatabaseFilesProvider.InsertRecentFile(databaseReference.DatabaseVersion, path);
                 }
             }
             catch (LiteException liteException)
@@ -180,28 +180,32 @@ namespace LiteDbExplorer.Modules
             }
             catch (NotSupportedException notSupportedException)
             {
-                _applicationInteraction.ShowError(notSupportedException,"Failed to open database [NotSupportedException]:" + Environment.NewLine + notSupportedException.Message);
+                _applicationInteraction.ShowError(notSupportedException, "Failed to open database [NotSupportedException]:" + Environment.NewLine + notSupportedException.Message);
             }
             catch (Exception e)
             {
                 Logger.Error(e, "Failed to open database: ");
-                _applicationInteraction.ShowError(e,"Failed to open database [Exception]:" + Environment.NewLine + e.Message);
+                _applicationInteraction.ShowError(e, "Failed to open database [Exception]:" + Environment.NewLine + e.Message);
             }
         }
 
         protected virtual async Task OpenDatabaseExceptionHandler(LiteException liteException, string path, string password = "")
         {
-            if (liteException.ErrorCode == LiteException.DATABASE_WRONG_PASSWORD)
+            _applicationInteraction.ShowError(liteException.StackTrace, liteException.Message + ". Is this a version 5 file?");
+            if (liteException.Message == "Invalid password")
             {
                 if (!string.IsNullOrEmpty(password))
                 {
                     _applicationInteraction.ShowAlert("Failed to open database [LiteException]:" + Environment.NewLine + liteException.Message, null, UINotificationType.Error);
                 }
-                    
                 await OpenDatabase(path, password).ConfigureAwait(false);
             }
+            else
+            {
+                _applicationInteraction.ShowError(liteException.StackTrace, liteException.Message + ". Is this possibly a version 5 file?");
+            }
         }
-        
+
         public Task CloseDatabase(DatabaseReference database)
         {
             Store.Current.CloseDatabase(database);
@@ -213,7 +217,7 @@ namespace LiteDbExplorer.Modules
         {
             await Task.Factory.StartNew(() =>
             {
-                database.ShrinkDatabase();
+                database.RebuildDatabase();
             });
         }
 
@@ -221,7 +225,7 @@ namespace LiteDbExplorer.Modules
         {
             await Task.Factory.StartNew(() =>
             {
-                database.ShrinkDatabase(string.IsNullOrEmpty(password) ? null : password);
+                database.RebuildDatabase(string.IsNullOrEmpty(password) ? null : password);
             });
 
             _recentDatabaseFilesProvider.ResetPassword(database.Location, password, true);
@@ -277,7 +281,7 @@ namespace LiteDbExplorer.Modules
                 if (!string.IsNullOrEmpty(fileId))
                 {
                     var file = database.AddFile(fileId, maybeFileName.Value);
-                    var documentsCreated = new CollectionDocumentChangeEventArgs(ReferenceNodeChangeAction.Add, new [] {file}, file.Collection);
+                    var documentsCreated = new CollectionDocumentChangeEventArgs(ReferenceNodeChangeAction.Add, new[] { file }, file.Collection);
                     return Result.Ok(documentsCreated);
                 }
             }
@@ -301,7 +305,7 @@ namespace LiteDbExplorer.Modules
             {
                 document.RemoveSelf();
             }
-            
+
             return Task.FromResult(Result.Ok());
         }
 
@@ -402,8 +406,8 @@ namespace LiteDbExplorer.Modules
         }
 
         public async Task<Maybe<string>> ExportAs(
-            IScreen context, 
-            CollectionReference collectionReference, 
+            IScreen context,
+            CollectionReference collectionReference,
             IList<DocumentReference> selectedDocuments = null)
         {
             if (collectionReference == null)
@@ -466,7 +470,7 @@ namespace LiteDbExplorer.Modules
 
 
         public async Task<Maybe<string>> ExportAs(
-            IScreen context, 
+            IScreen context,
             QueryResult queryResult,
             string name = "")
         {
@@ -523,18 +527,18 @@ namespace LiteDbExplorer.Modules
         public Task<Result> CopyDocuments(IEnumerable<DocumentReference> documents)
         {
             var documentAggregator = new DocumentReferenceAggregator(documents);
-            
-            Clipboard.SetData(DataFormats.Text, documentAggregator.Serialize(true, false));
+
+            Clipboard.SetData(DataFormats.Text, documentAggregator.Serialize());
 
             return Task.FromResult(Result.Ok());
         }
-        
+
         public Task<Maybe<DocumentReference>> OpenEditDocument(DocumentReference document)
         {
             var result = _applicationInteraction.OpenEditDocument(document);
-            return Task.FromResult(Maybe<DocumentReference>.From(result ? document: null));
+            return Task.FromResult(Maybe<DocumentReference>.From(result ? document : null));
         }
-        
+
         public Task<Result<CollectionDocumentChangeEventArgs>> ImportDataFromText(CollectionReference collection, string textData)
         {
             try
@@ -575,7 +579,7 @@ namespace LiteDbExplorer.Modules
                 return Task.FromResult(Result.Failure<CollectionDocumentChangeEventArgs>(message));
             }
         }
-        
+
         public async Task<Result<CollectionDocumentChangeEventArgs>> CreateDocument(IScreen context, CollectionReference collection)
         {
             if (collection is FileCollectionReference)
@@ -599,7 +603,7 @@ namespace LiteDbExplorer.Modules
             };
 
             var documentReference = collection.AddDocument(newDoc);
-            
+
             var documentsCreated = new CollectionDocumentChangeEventArgs(ReferenceNodeChangeAction.Add, documentReference, collection)
             {
                 PostAction = (optionsResult.Model.EditAfterCreate || optionsResult.Action is AddDocumentOptions.ACTION_OK_AND_EDIT) ? "edit" : null
@@ -618,7 +622,7 @@ namespace LiteDbExplorer.Modules
                 {
                     using (var writer = new StreamWriter(maybeJsonFileName.Value))
                     {
-                        documents.First().Serialize(writer, true);
+                        documents.First().Serialize(writer);
                     }
                 }
                 else
@@ -626,7 +630,7 @@ namespace LiteDbExplorer.Modules
                     var documentAggregator = new DocumentReferenceAggregator(documents);
                     using (var writer = new StreamWriter(maybeJsonFileName.Value))
                     {
-                        documentAggregator.Serialize(writer, true, false);
+                        documentAggregator.Serialize(writer);
                     }
                 }
             }
@@ -678,7 +682,7 @@ namespace LiteDbExplorer.Modules
                         }
                         else
                         {
-                            cellValue = bsonValue.RawValue;     
+                            cellValue = bsonValue.RawValue;
                         }
 
                         var cell = ws.Cells[currentRow, currentColl];
@@ -688,20 +692,20 @@ namespace LiteDbExplorer.Modules
                             cell.Style.Numberformat.Format = format(bsonValue);
                         }
                     }
-                    
+
                     currentColl++;
                 }
 
                 currentColl = 1;
                 currentRow++;
             }
-            
+
             var tableRange = ws.Cells[1, 1, documents.Count + 1, keys.Length];
             var resultsTable = ws.Tables.Add(tableRange, $"{Regex.Replace(name, @"\s", "_")}_table");
 
             resultsTable.ShowFilter = true;
             resultsTable.ShowHeader = true;
-            
+
             // AutoFit
             ws.Cells[ws.Dimension.Address].AutoFitColumns();
 
@@ -724,12 +728,12 @@ namespace LiteDbExplorer.Modules
             var ws = excelPackage.Workbook.Worksheets.Add(name);
 
             ws.Cells[@"A1"].LoadFromDataTable(dataTable, true);
-            
+
             var resultsTable = ws.Tables.Add(ws.Dimension, $"{Regex.Replace(name, @"\s", "_")}_table");
 
             resultsTable.ShowFilter = true;
             resultsTable.ShowHeader = true;
-            
+
             // AutoFit
             ws.Cells[ws.Dimension.Address].AutoFitColumns();
 
@@ -820,7 +824,7 @@ namespace LiteDbExplorer.Modules
                 var value = Convert.ToString(field, CultureInfo.InvariantCulture);
                 if (value != null && value.IndexOfAny(reservedTokens) >= 0)
                 {
-                    value = "\"" + value.Replace("\"", "\"\"") + "\"";  
+                    value = "\"" + value.Replace("\"", "\"\"") + "\"";
                 }
                 return value;
             }
@@ -866,12 +870,12 @@ namespace LiteDbExplorer.Modules
                         var prefix = file.GetIdAsFilename();
 
                         var path = Path.Combine(maybePath.Value, $"{prefix}-{file.Filename}");
-                            
+
                         ArchiveExtensions.EnsureFileDirectory(path);
-                           
+
                         file.SaveFile(path);
                     }
-                }    
+                }
             }
 
             return maybePath;
@@ -890,7 +894,7 @@ namespace LiteDbExplorer.Modules
             {
                 using (var writer = new StreamWriter(maybeFileName.Value))
                 {
-                    provider.Serialize(writer, true);
+                    provider.Serialize(writer);
                 }
             }
 

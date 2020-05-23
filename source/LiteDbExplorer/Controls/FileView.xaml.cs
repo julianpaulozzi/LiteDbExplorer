@@ -2,11 +2,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using HL.Manager;
@@ -14,9 +12,7 @@ using Humanizer;
 using Humanizer.Bytes;
 using LiteDbExplorer.Wpf.Framework.Win32;
 using ICSharpCode.AvalonEdit;
-using LiteDbExplorer.Core;
 using LiteDbExplorer.Presentation;
-using ZoomAndPan;
 
 namespace LiteDbExplorer.Controls
 {
@@ -54,7 +50,7 @@ namespace LiteDbExplorer.Controls
         private static void OnFileSourceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             var fileView = d as FileView;
-            if (e.NewValue is LiteFileInfo liteFileInfo)
+            if (e.NewValue is LiteFileInfo<string> liteFileInfo)
             {
                 fileView?.LoadFile(liteFileInfo);
             }
@@ -92,7 +88,7 @@ namespace LiteDbExplorer.Controls
 
         public string FileExtension { get; private set; }
 
-        public void LoadFile(LiteFileInfo file)
+        public void LoadFile(LiteFileInfo<string> file)
         {
             Reset();
 
@@ -153,7 +149,7 @@ namespace LiteDbExplorer.Controls
             NoFilePreviewText.Text = string.Empty;
         }
 
-        protected void SetNoContentPreview(LiteFileInfo file, string prependMessage = null)
+        protected void SetNoContentPreview<T>(LiteFileInfo<T> file, string prependMessage = null)
         {
             var message = $"No preview for \"{file.MimeType}\".";
             if (!string.IsNullOrEmpty(prependMessage))
@@ -177,7 +173,7 @@ namespace LiteDbExplorer.Controls
             ResetNoContentPreview();
         }
 
-        protected void SetFileInfoContent(LiteFileInfo file)
+        protected void SetFileInfoContent<T>(LiteFileInfo<T> file)
         {
             var fileInfo = new Dictionary<string, string>
             {
@@ -245,20 +241,20 @@ namespace LiteDbExplorer.Controls
     public abstract class FilePreviewHandler
     {
         public abstract bool CanContentScroll { get; }
-        public abstract bool CanHandle(LiteFileInfo file);
-        public abstract FrameworkElement GetPreview(LiteFileInfo file);
+        public abstract bool CanHandle(LiteFileInfo<string> file);
+        public abstract FrameworkElement GetPreview(LiteFileInfo<string> file);
     }
 
     public class ImageFilePreviewHandler : FilePreviewHandler
     {
         public override bool CanContentScroll => false;
 
-        public override bool CanHandle(LiteFileInfo file)
+        public override bool CanHandle(LiteFileInfo<string> file)
         {
             return file.MimeType.StartsWith("image");
         }
 
-        public override FrameworkElement GetPreview(LiteFileInfo file)
+        public override FrameworkElement GetPreview(LiteFileInfo<string> file)
         {
             using (var fStream = file.OpenRead())
             {
@@ -308,13 +304,13 @@ namespace LiteDbExplorer.Controls
             }
         }
 
-        public override bool CanHandle(LiteFileInfo file)
+        public override bool CanHandle(LiteFileInfo<string> file)
         {
             var fileExtension = Path.GetExtension(file.Filename);
             return TextRegex.IsMatch(file.MimeType) || _allHandledTextExtension.Contains(fileExtension);
         }
 
-        public override FrameworkElement GetPreview(LiteFileInfo file)
+        public override FrameworkElement GetPreview(LiteFileInfo<string> file)
         {
             var fileExtension = Path.GetExtension(file.Filename);
             using (var fileStream = file.OpenRead())

@@ -38,31 +38,31 @@ namespace LiteDbExplorer.Core
 
         public DataTable DataTable => Source.ToDataTable(_cultureFormat);
 
-        public string Serialize(bool pretty = false, bool decoded = true)
+        public string Serialize(bool decoded = true)
         {
             var json = string.Empty;
-            
+
             if (IsArray)
             {
-                json = JsonSerializer.Serialize(AsArray, pretty, false);
+                json = JsonSerializer.Serialize(AsArray);
             }
             else if (IsDocument)
             {
-                json = JsonSerializer.Serialize(AsDocument, pretty, false);
+                json = JsonSerializer.Serialize(AsDocument);
             }
 
             return decoded ? EncodingExtensions.DecodeEncodedNonAsciiCharacters(json) : json;
         }
 
-        public void Serialize(TextWriter writer, bool pretty = false)
+        public void Serialize(TextWriter writer)
         {
             if (IsArray)
             {
-                JsonSerializer.Serialize(AsArray, writer, pretty, false);
+                JsonSerializer.Serialize(AsArray, writer);
             }
             else if (IsDocument)
             {
-                JsonSerializer.Serialize(AsDocument, writer, pretty, false);
+                JsonSerializer.Serialize(AsDocument, writer);
             }
         }
 

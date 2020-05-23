@@ -331,7 +331,7 @@ namespace LiteDbExplorer.Controls
 
         private bool ItemMatchesSearch(string matchTerm, DocumentReference document, bool matchCase)
         {
-            var stringData = document.Serialize(false, false);
+            var stringData = document.Serialize(false);
 
             if (matchCase)
             {

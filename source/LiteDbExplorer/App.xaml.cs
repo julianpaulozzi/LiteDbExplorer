@@ -124,7 +124,7 @@ namespace LiteDbExplorer
             var openDatabaseTask = new JumpTask
             {
                 Title = "Open database",
-                Description = "Open LiteDB v4 database file",
+                Description = $"Open LiteDB database file, version {Config.Version}",
                 ApplicationPath = applicationPath,
                 Arguments = @"open"
             };
@@ -133,7 +133,7 @@ namespace LiteDbExplorer
             var newDatabaseTask = new JumpTask
             {
                 Title = "New database",
-                Description = "Create and open new LiteDB v4 database",
+                Description = $"Create and open new LiteDB database, version {Config.Version}",
                 ApplicationPath = applicationPath,
                 Arguments = @"new"
             };

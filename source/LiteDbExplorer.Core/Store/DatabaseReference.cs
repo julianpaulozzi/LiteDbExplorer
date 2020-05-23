@@ -17,6 +17,12 @@ namespace LiteDbExplorer.Core
         private ObservableCollection<CollectionReference> _collections;
         private bool _isDisposing;
 
+        public enum PasswordStatus
+        {
+            NotSet = 0,
+            Set = 1
+        }
+
         public DatabaseReference([NotNull] DatabaseConnectionOptions options)
         {
             if (options == null)
@@ -33,7 +39,7 @@ namespace LiteDbExplorer.Core
 
             var connectionString = options.GetConnectionString();
 
-            LiteDatabase = new LiteDatabase(connectionString, log: GetLogger());
+            LiteDatabase = new LiteDatabase(connectionString);
 
             UpdateCollections();
 
@@ -50,8 +56,8 @@ namespace LiteDbExplorer.Core
 
         public int UserVersion
         {
-            get => LiteDatabase.Engine.UserVersion;
-            set => LiteDatabase.Engine.UserVersion = (ushort) value;
+            get => LiteDatabase.UserVersion;
+            set => LiteDatabase.UserVersion = (ushort)value;
         }
 
         public ObservableCollection<CollectionReferenceLookup> CollectionsLookup { get; private set; }
@@ -157,24 +163,24 @@ namespace LiteDbExplorer.Core
             return Collections.Any(p => p.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
         }
 
-        public long ShrinkDatabase()
+        public long RebuildDatabase()
         {
-            return LiteDatabase.Shrink();
+            return LiteDatabase.Rebuild();
         }
 
-        public long ShrinkDatabase(string password)
+        public long RebuildDatabase(string password)
         {
-            return LiteDatabase.Shrink(password);
+            return LiteDatabase.Rebuild(new LiteDB.Engine.RebuildOptions { Password = password });
         }
 
         public IList<BsonValue> RunCommand(string command)
         {
-            return LiteDatabase.Engine.Run(command);
+            return LiteDatabase.Execute(command).ToList();
         }
 
         public BsonDocument InternalDatabaseInfo()
         {
-            return LiteDatabase.Engine.Info();
+            return LiteDatabase.Mapper.ToDocument(typeof(object), new { LiteDatabase.Timeout, LiteDatabase.UserVersion, LiteDatabase.UtcDate, LiteDatabase.LimitSize, LiteDatabase.CheckpointSize });
         }
 
         public void BeforeDispose()
@@ -189,24 +195,18 @@ namespace LiteDbExplorer.Core
             BroadcastChanges(ReferenceNodeChangeAction.Dispose, this);
         }
 
+        /// <summary>
+        /// <a href="https://stackoverflow.com/questions/57139624/how-to-check-if-litedb-database-file-has-password-or-not-in-c"></a>
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
         public static bool IsDbPasswordProtected(string path)
         {
-            using (var db = new LiteDatabase(path))
-            {
-                try
-                {
-                    db.GetCollectionNames();
-                    return false;
-                }
-                catch (LiteException e)
-                {
-                    if (e.ErrorCode == LiteException.DATABASE_WRONG_PASSWORD || e.Message.Contains("password"))
-                    {
-                        return true;
-                    }
 
-                    throw;
-                }
+            using (FileStream fs = File.OpenRead(path))
+            {
+                var ss= fs.ReadByte() ;
+                return ss != (byte)PasswordStatus.NotSet;
             }
         }
 
@@ -269,16 +269,6 @@ namespace LiteDbExplorer.Core
 
                 referenceCollection.OnReferenceChanged(action, referenceCollection);
             }
-        }
-
-        private Logger GetLogger()
-        {
-            if (_enableLog)
-            {
-                return new Logger(Logger.FULL, log => { Log.ForContext("DatabaseName", Name).Information(log); });
-            }
-
-            return null;
         }
 
         private void UpdateCollections()

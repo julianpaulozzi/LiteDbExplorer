@@ -114,7 +114,7 @@
                         <materialDesign:PackIcon Kind="Close" Width="16" Height="16" />
                     </Button>
                 </Grid>
-                
+
 
                 <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
                     <ItemsControl
@@ -237,12 +237,12 @@
                                     </Grid>
                                 </Button>
                                 <DataTemplate.Triggers>
-                                    
+
                                     <MultiDataTrigger>
                                         <MultiDataTrigger.Conditions>
                                             <Condition Binding="{Binding ElementName=OpenRecentButton, Path=IsMouseOver}" Value="True" />
                                             <Condition Binding="{Binding Path=IsFixed}" Value="False" />
-                                        </MultiDataTrigger.Conditions>   
+                                        </MultiDataTrigger.Conditions>
                                         <Setter TargetName="PinItemButton" Property="Visibility" Value="Visible" />
                                     </MultiDataTrigger>
 
@@ -250,7 +250,7 @@
                                         <MultiDataTrigger.Conditions>
                                             <Condition Binding="{Binding ElementName=PinedItemButton, Path=IsMouseOver}" Value="True" />
                                             <Condition Binding="{Binding Path=IsFixed}" Value="True" />
-                                        </MultiDataTrigger.Conditions>   
+                                        </MultiDataTrigger.Conditions>
                                         <Setter TargetName="PinedIcon" Property="Kind" Value="PinOff" />
                                     </MultiDataTrigger>
 
@@ -338,9 +338,12 @@
                                        TextTrimming="CharacterEllipsis"
                                        Style="{StaticResource MaterialDesignSubheadingTextBlock}" />
                             <TextBlock Grid.Column="1" Grid.Row="1"
-                                       Text="Open LiteDB v4 database file" Padding="0,5"
+                                       Padding="0,5"
                                        TextWrapping="Wrap"
-                                       Style="{StaticResource MaterialDesignCaptionTextBlock}" />
+                                       Style="{StaticResource MaterialDesignCaptionTextBlock}" >
+                                    <Run> Open new LiteDB database, version </Run>
+                                    <Run Text="{x:Static liteDbExplorer:Config.Version}"/>
+                            </TextBlock>
                         </Grid>
                     </Button>
 
@@ -361,9 +364,12 @@
                                        TextTrimming="CharacterEllipsis"
                                        Style="{StaticResource MaterialDesignSubheadingTextBlock}" />
                             <TextBlock Grid.Column="1" Grid.Row="1"
-                                       Text="Create and open new LiteDB v4 database" Padding="0,5"
+                                       Padding="0,5"
                                        TextWrapping="Wrap"
-                                       Style="{StaticResource MaterialDesignCaptionTextBlock}" />
+                                       Style="{StaticResource MaterialDesignCaptionTextBlock}" >
+                                    <Run> Create and open new LiteDB database, version  </Run>
+                                    <Run Text="{x:Static liteDbExplorer:Config.Version}"/>
+                            </TextBlock>
                         </Grid>
                     </Button>
 

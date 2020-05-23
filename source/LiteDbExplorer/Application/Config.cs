@@ -19,6 +19,8 @@ namespace LiteDbExplorer
 
         public static string PipeEndpoint => ConfigurationManager.AppSettings["PipeEndpoint"];
 
+        public static string Version => ConfigurationManager.AppSettings["Version"];
+
         public static bool IsPortable => !File.Exists(Paths.UninstallerPath);
 
         public static void ConfigureLogger()

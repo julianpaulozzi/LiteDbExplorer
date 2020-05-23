@@ -4,7 +4,7 @@ namespace LiteDbExplorer.Core
 {
     public interface IJsonSerializerProvider
     {
-        string Serialize(bool pretty = false, bool decoded = true);
-        void Serialize(TextWriter writer, bool pretty = false);
+        string Serialize(bool decoded);
+        void Serialize(TextWriter writer);
     }
 }

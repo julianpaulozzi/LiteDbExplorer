@@ -67,14 +67,14 @@ namespace LiteDbExplorer.Core
             Collection = null;
         }
 
-        public string Serialize(bool pretty = false, bool decoded = true)
+        public string Serialize(bool decoded = true)
         {
-            return decoded ? LiteDocument.SerializeDecoded(true) : JsonSerializer.Serialize(LiteDocument, pretty, false);
+            return decoded ? LiteDocument.SerializeDecoded() : JsonSerializer.Serialize(LiteDocument);
         }
 
-        public void Serialize(TextWriter writer, bool pretty = false)
+        public void Serialize(TextWriter writer)
         {
-            JsonSerializer.Serialize(LiteDocument, writer, pretty, false);
+            JsonSerializer.Serialize(LiteDocument, writer);
         }
     }
 }

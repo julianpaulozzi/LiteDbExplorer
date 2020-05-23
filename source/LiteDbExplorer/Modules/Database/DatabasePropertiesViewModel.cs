@@ -11,7 +11,6 @@ using Humanizer;
 using JetBrains.Annotations;
 using LiteDbExplorer.Windows;
 using LiteDbExplorer.Core;
-using JsonSerializer = LiteDB.JsonSerializer;
 
 namespace LiteDbExplorer.Modules.Database
 {
@@ -117,9 +116,10 @@ namespace LiteDbExplorer.Modules.Database
             var databaseInfo = new List<DisplayInfo>
             {
                 new DisplayInfo("Collections:", _databaseReference.Collections.Count),
-                new DisplayInfo("Encrypted:", engineInfoDocument["encrypted"].AsBoolean),
-                new DisplayInfo("Change ID:", engineInfoDocument["changeID"].RawValue),
-                new DisplayInfo("Last page ID:", engineInfoDocument["lastPageID"].RawValue)
+                new DisplayInfo("TimeOut:", engineInfoDocument["TimeOut"].AsInt64),
+                new DisplayInfo("UtcDate:", engineInfoDocument["UtcDate"].RawValue),
+                new DisplayInfo("LimitSize:", engineInfoDocument["LimitSize"].AsInt64),
+                new DisplayInfo("CheckpointSize:", engineInfoDocument["CheckpointSize"].RawValue)
             };
             
             DatabaseInfo = databaseInfo;
@@ -137,7 +137,7 @@ namespace LiteDbExplorer.Modules.Database
 
             DatabaseFileInfo = databaseFileInfo;
 
-            MetadataJson = JsonSerializer.Serialize(engineInfoDocument, true, false);
+            MetadataJson = LiteDB.JsonSerializer.Serialize(engineInfoDocument);
         }
 
     }
